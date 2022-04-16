@@ -1,70 +1,74 @@
 var TrackerService = TrackerService || {};
 
-TrackerService.configCookiesDisabled = false
-TrackerService.configCookieNamePrefix = '_pk_',
-TrackerService.configTrackerSiteId = '',
-TrackerService.domainHash = '',
-
 
 TrackerService.getTracker = () => {
-  return this;
-}
 
-/**
-  * Get the visitor information (from first party cookie)
-  *
-  * @return array
-*/
-TrackerService.getVisitorInfo = () => {
+  configCookiesDisabled = false
+  configCookieNamePrefix = '_pk_',
+    configTrackerSiteId = '',
+    domainHash = '',
 
-  return [True, "ID8OJ", 0, new Date(), new Date() ]
-}
+    /**
+     * Get the visitor information (from first party cookie)
+     *
+     * @return array
+     */
+    TrackerService.getVisitorInfo = () => {
 
-TrackerService.trackEvent = (cat, action, name, value) => {
+      return [true, "ID8OJ", 0, new Date(), new Date() ]
+    }
 
-}
-
-TrackerService.setCustomDimension = (index, value) => {
-
-}
-
-TrackerService.getCookie = (cookieName) => {
-  if (TrackerService.configCookiesDisabled) {
-    return 0;
+  TrackerService.trackEvent = (cat, action, name, value) => {
+    console.log(cat, action, name, value)
   }
 
-  TrackerService.getCookieName = (baseName) => {
-    return TrackerService.configCookieNamePrefix + baseName + '.' + TrackerService.configTrackerSiteId + '.' + TrackerService.domainHash;
+  TrackerService.setCustomDimension = (index, value) => {
+    console.log(index, value)
   }
 
+  getCookie = (cookieName) => {
+    if (configCookiesDisabled) {
+      return 0;
+    }
+
+    getCookieName = (baseName) => {
+      return configCookieNamePrefix + baseName + '.' + configTrackerSiteId + '.' + domainHash;
+    }
 
 
-  var cookiePattern = new RegExp('(^|;)[ ]*' + cookieName + '=([^;]*)'),
-  cookieMatch = cookiePattern.exec(documentAlias.cookie);
 
-  return cookieMatch ? decodeWrapper(cookieMatch[2]) : 0;
-}
+    var cookiePattern = new RegExp('(^|;)[ ]*' + cookieName + '=([^;]*)'),
+      cookieMatch = cookiePattern.exec(documentAlias.cookie);
 
-TrackerService.setVisitorIdCookie = (visitorIdCookieValues) =>{
-  if(!TrackerService.configTrackerSiteId) {
-    // when called before Site ID was set
-    return;
+    return cookieMatch ? decodeWrapper(cookieMatch[2]) : 0;
   }
 
-  var now = new Date(),
-  nowTs = Math.round(now.getTime() / 1000);
+  setVisitorIdCookie = (visitorIdCookieValues) =>{
+    if(!configTrackerSiteId) {
+      // when called before Site ID was set
+      return;
+    }
 
-  if(!isDefined(visitorIdCookieValues)) {
+    var now = new Date(),
+      nowTs = Math.round(now.getTime() / 1000);
+
+    if(!isDefined(visitorIdCookieValues)) {
       visitorIdCookieValues = getValuesFromVisitorIdCookie();
+    }
+
+    var cookieValue = visitorIdCookieValues.uuid + '.' +
+      visitorIdCookieValues.createTs + '.';
+
+    setCookie(getCookieName('id'),
+      cookieValue, getRemainingVisitorCookieTimeout(),
+      configCookiePath, configCookieDomain, configCookieIsSecure, configCookieSameSite);
   }
 
-  var cookieValue = visitorIdCookieValues.uuid + '.' +
-  visitorIdCookieValues.createTs + '.';
 
-   setCookie(getCookieName('id'), 
-      cookieValue, getRemainingVisitorCookieTimeout(), 
-      configCookiePath, configCookieDomain, configCookieIsSecure, configCookieSameSite);
+  return TrackerService;
 }
+
+
 
 var ajax;
 
@@ -98,14 +102,14 @@ function notify(e) {
       body: JSON.stringify(data),
     }).then(response => response.json()).then(data => {
       linkData = []
-        console.log('Success:', data);
-      }).catch((error) => {
-        console.error('Error:', error);
-      });
+      console.log('Success:', data);
+    }).catch((error) => {
+      console.error('Error:', error);
+    });
   }, 1000)
 }
 
 /*
 Assign `notify()` as a listener to messages from the content script.
 */
-window.addEventListener('link', notify);
+// window.addEventListener('link', notify);

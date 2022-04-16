@@ -3,7 +3,7 @@
  * Source: https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Global_Objects/String/startsWith
  */
 
-if (typeof String.prototype.startsWith !== 'function') {
+ if (typeof String.prototype.startsWith !== 'function') {
   String.prototype.startsWith = (str) => {
     return this.indexOf(str) === 0;
   }
@@ -17,7 +17,7 @@ EventTracking.IsServer = false;
 EventTracking.Init = () => {
   if (TrackerService !== null && typeof(TrackerService) === 'object') {
     EventTracking.IsServer = true;
-    EventTracking.Tracker = TrackerCTrackerServicelient.getTracker();
+    EventTracking.Tracker = TrackerService.getTracker();
     EventTracking._Init();
   } else {
     console.log("No TrackerService detected!");
@@ -32,6 +32,7 @@ EventTracking._Init = () => {
   EventTracking.Scroll = Scroll
   EventTracking.InitScrollEvents();
   EventTracking.InitTextSelection();
+  EventTracking.InitLinkClick();
 }
 
 
@@ -74,15 +75,15 @@ EventTracking.InitScrollEvents = ()=> {
   var scrollTop =  $(document).height() - $(window).height();
   $( window ).scroll(() => {
     if ($(window).scrollTop() > 25) {
-      if ($(window).scrollTop() > 3*(scrollTop/4) && EventTracking.Scroll['75'] == false) {
+      if ($(window).scrollTop() > 3*(scrollTop/4) && EventTracking.Scroll['75'] === false) {
          // Scrolled 75%
          EventTracking.Scroll['75'] = true;
          EventTracking.RegisterUIEvent("Window", "scroll", "scroll75");
-      }else if( $(window).scrollTop() > 2*(scrollTop/4) && EventTracking.Scroll['50'] == false ){
+      }else if( $(window).scrollTop() > 2*(scrollTop/4) && EventTracking.Scroll['50'] === false ){
         // Scrolled 50%
         EventTracking.Scroll['50'] = true;
         EventTracking.RegisterUIEvent("Window", "scroll", "scroll50");
-    } else if( $(window).scrollTop() > (scrollTop/4) && EventTracking.Scroll['25'] == false ){
+    } else if( $(window).scrollTop() > (scrollTop/4) && EventTracking.Scroll['25'] === false ){
         // Scrolled 25%
         EventTracking.Scroll['25'] = true;
         EventTracking.RegisterUIEvent("Window", "scroll", "scroll25");
@@ -108,7 +109,7 @@ EventTracking.InitVisitorServer = () => {
     EventTracking.LastVisitTimestamp = VisitorInfo[4];
     // Use the NumberOfVisits to discover if the visitor
     // is new or NOT
-    if( EventTracking.NumberOfVisits == 1 ){
+    if( EventTracking.NumberOfVisits === 1 ){
       EventTracking.IsNewVisitor = 1;
     } else {
       EventTracking.IsNewVisitor = 0;
@@ -119,8 +120,17 @@ EventTracking.InitVisitorServer = () => {
 EventTracking.InitTextSelection = function(){
   EventTracking.Utils.StartListenSelectTextEvent( EventTracking._TextSelectCallBack );
 }
+
+EventTracking.InitLinkClick = () => {
+  EventTracking.Utils.StartListenClickLinkEvent(EventTracking._LinkClickCallBack);
+}
+
 EventTracking._TextSelectCallBack = function( text ){
   EventTracking.RegisterUIEvent("document", "selection", "text", text);
+}
+
+EventTracking._LinkClickCallBack = (text, href) => {
+  EventTracking.RegisterUIEvent("Link", "navigate", text, href)
 }
 
 EventTracking.RegisterUIEvent = function( category, action, name, value ){
@@ -140,13 +150,13 @@ EventTracking.RegisterCustomDimension = function( index, value ){
 EventTracking.ParseNameVariables = function( event, varname ){
   var element = $(event.target);
   var content = "unkwown";
-  if( varname == "%content" ){
+  if( varname === "%content" ){
       content = element.text().trim();
-  } else if( varname == "%title" ){
+  } else if( varname === "%title" ){
       content = element.attr("title").trim();
-  } else if( varname == "%parentcontent" ){
+  } else if( varname === "%parentcontent" ){
       content = element.parent().text().trim();
-  } else if( varname == "%parenttitle" ){
+  } else if( varname === "%parenttitle" ){
       content = element.parent().attr("title").trim();
   } else {
       content = varname;
@@ -165,12 +175,12 @@ EventTracking.LateRegisterDOMEvent = function( selector, bindevent, category, ac
   $(selector).on(bindevent, function(e){
       var element = $(e.target);
       var content = EventTracking.ParseNameVariables(e, name);
-      if( element.prop("tagName") == "A" ){
+      if( element.prop("tagName") === "A" ){
           var href = element.attr("href");
           /*
-              Avoid to add a "storage hash" to links
-              that has an hash yet in their HREF
-              FEA1 request 25-10-2015
+             Avoid to add a "storage hash" to links
+             that has an hash yet in their HREF
+             FEA1 request 25-10-2015
           */
           if( href.indexOf("#") === -1 ){
               element.attr("href", href+"#_ea_pwkdt_="+category+"_late;"+action+";"+content+";"+value);
@@ -188,11 +198,11 @@ EventTracking.DelayRegisterDOMEvent = function( selector, bindevent, category, a
       var element = $(e.target);
       var content = EventTracking.ParseNameVariables(e, name);
       EventTracking.CookieStorage.create("_ea_pwkdt_", category+"_delay|"+action+"|"+content+"|"+value);
-      if( element.prop("tagName") == "A" ){
+      if( element.prop("tagName") === "A" ){
           element.unbind("click");
           setTimeout(function(){ window.location = $(element).attr("href"); }, 125);
           return false;
-      } else if( element.prop("tagName") == "FORM" ) {
+      } else if( element.prop("tagName") === "FORM" ) {
           element.unbind("submit");
           setTimeout(function(){ element.submit(); }, 125);
           return false;
@@ -202,7 +212,7 @@ EventTracking.DelayRegisterDOMEvent = function( selector, bindevent, category, a
 
 EventTracking.TrackFormInteraction = function(){
   var form = $('form.EventTracking');
-  if( form.size() == 1 ){
+  if( form.size() === 1 ){
       // Track the interaction with
       // every single INPUT different
       // from type="hidden"
@@ -223,7 +233,7 @@ EventTracking.RegisterInputFieldEvent = function( input ){
   if( !InputId ){
       InputId = InputName;
   }
-  if(InputType != "hidden"){
+  if(InputType !== "hidden"){
       var InputPlaceholder;
       if( $(input).attr("placeholder") ){
           InputPlaceholder = $(input).attr("placeholder");
@@ -242,13 +252,13 @@ EventTracking.RegisterInputFieldEvent = function( input ){
 EventTracking.InputInteractionDetectorCallback = function( event ){
   var target = $(event.target);
   console.log(event.type);
-  if( event.type == "keyup" ){
-      if(target.val() != ""){
+  if( event.type === "keyup" ){
+      if(target.val() !== ""){
           $(this).unbind(event.type);
           var content = $(this).attr("data-input-name");
           EventTracking.RegisterUIEvent("FormInput", event.type, content);
       }
-  } else if( event.type != "keyup" ) {
+  } else if( event.type !== "keyup" ) {
       $(this).unbind(event.type);
       var content = $(this).attr("data-input-name");
       EventTracking.RegisterUIEvent("FormInput", event.type, content);
@@ -304,8 +314,14 @@ EventTracking.Utils.getSelectedText = function(){
     return ret;
 }
 
+EventTracking.Utils.getLinkContent = (element)=> {
+  return EventTracking.ParseNameVariables(element, "%content")
+}
+
 EventTracking.Utils.LastSelectedText = false;
 EventTracking.Utils.SelectTextEventFired = false;
+EventTracking.SelectLinkEventFired = false;
+EventTracking.LastLinkText = false;
 
 
 EventTracking.Utils.StartListenSelectTextEvent = function( callback ){
@@ -313,7 +329,7 @@ EventTracking.Utils.StartListenSelectTextEvent = function( callback ){
       e.preventDefault();
       if( !EventTracking.Utils.SelectTextEventFired ){
           var text=EventTracking.Utils.getSelectedText();
-          if (text!='' && text != EventTracking.Utils.LastSelectedText){
+          if (text !== '' && text !== EventTracking.Utils.LastSelectedText){
             EventTracking.Utils.LastSelectedText = text;
               callback( text );
           }
@@ -321,6 +337,22 @@ EventTracking.Utils.StartListenSelectTextEvent = function( callback ){
           setTimeout(function(){ EventTracking.Utils.SelectTextEventFired = false; }, 50);
       }
   });
+}
+
+EventTracking.Utils.StartListenClickLinkEvent = (callback) => {
+  $("[href]").on("click", (e) => {
+    e.preventDefault();
+    if (!EventTracking.Utils.SelectLinkEventFired) {
+      var content = EventTracking.Utils.getLinkContent(e);
+      var href = $(e.target).attr("href");
+      if (content !=='' && content !== EventTracking.Utils.LastLinkText ) {
+        EventTracking.Utils.LastLinkText = content;
+        callback( content, href );
+      }
+      EventTracking.Utils.SelectLinkEventFired = true;
+      setTimeout(function(){ EventTracking.Utils.SelectLinkEventFired = false; }, 50);
+    }
+  })
 }
 
 EventTracking.Utils.getMetadata = function(){
