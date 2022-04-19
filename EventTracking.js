@@ -200,7 +200,7 @@ EventTracking.DelayRegisterDOMEvent = function( selector, bindevent, category, a
       EventTracking.CookieStorage.create("_ea_pwkdt_", category+"_delay|"+action+"|"+content+"|"+value);
       if( element.prop("tagName") === "A" ){
           element.unbind("click");
-          setTimeout(function(){ window.location = $(element).attr("href"); }, 125);
+          // setTimeout(function(){ window.location = $(element).attr("href"); }, 125);
           return false;
       } else if( element.prop("tagName") === "FORM" ) {
           element.unbind("submit");
@@ -340,14 +340,18 @@ EventTracking.Utils.StartListenSelectTextEvent = function( callback ){
 }
 
 EventTracking.Utils.StartListenClickLinkEvent = (callback) => {
-  $("[href]").on("click", (e) => {
+  window.addEventListener("click", (e) => {
     e.preventDefault();
     if (!EventTracking.Utils.SelectLinkEventFired) {
-      var content = EventTracking.Utils.getLinkContent(e);
-      var href = $(e.target).attr("href");
-      if (content !=='' && content !== EventTracking.Utils.LastLinkText ) {
-        EventTracking.Utils.LastLinkText = content;
-        callback( content, href );
+      var href = $(e.target).attr("href") || $(e.target.parentNode).attr("href");
+      if (href) {
+        var content = EventTracking.Utils.getLinkContent(e);
+        if (content !=='' && content !== EventTracking.Utils.LastLinkText ) {
+          EventTracking.Utils.LastLinkText = content;
+          callback( content, href );
+        }
+      } else  {
+
       }
       EventTracking.Utils.SelectLinkEventFired = true;
       setTimeout(function(){ EventTracking.Utils.SelectLinkEventFired = false; }, 50);
@@ -363,30 +367,3 @@ EventTracking.Utils.getMetadata = function(){
   alert(description);
   alert(keywords);
 }
-
-
-/*
-If the click was on a link, send a message to the background page.
-The message contains the link's URL.
-*/
-function notifyExtension(e) {
-  var target = e.target;
-  while ((target.tagName !== "A" || !target.href) && target.parentNode) {
-    target = target.parentNode;
-  }
-  if (target.tagName !== "A")
-    return;
-
-  window.dispatchEvent( new CustomEvent('link', {
-    detail: {
-      text: e.target.innerHTML,
-      url: e.target.href,
-      date: new Date()
-    }
-  }))
-}
-
-/*
-Add notifyExtension() as a listener to click events.
-*/
-window.addEventListener("click", notifyExtension);
