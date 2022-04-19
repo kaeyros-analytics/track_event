@@ -28,7 +28,8 @@ TrackerService.getTracker = () => {
 
         const data = {cat: cat, action: action, name: name, value: value};
         console.log(data)
-
+          // todo have to be dynamic 
+          // please write the right IP-adresse of you computer
         fetch('http://192.168.1.11:5000/api/link-data', {
           method: 'POST',
           headers: {
