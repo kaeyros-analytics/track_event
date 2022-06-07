@@ -16,6 +16,8 @@ window.api = {
 
         ajax = new XMLHttpRequest();
         if(ajax!=null){
+            // todo have to be dynamic 
+          // please write the right IP-adresse of you computer
             ajax.open("GET","http://192.168.1.11:5000/api/ip",true);
             ajax.onreadystatechange = function() {
                 if(this.readyState == 4) {
